@@ -1,0 +1,42 @@
+[
+  {
+    "id": "EV001",
+    "category": "input_validation",
+    "message": "",
+    "required_phrases": ["Please enter a message"],
+    "forbidden_phrases": [],
+    "description": "Empty messages should receive a helpful validation response."
+  },
+  {
+    "id": "EV002",
+    "category": "order_lookup",
+    "message": "What is the status of order ORD999999?",
+    "required_phrases": ["ORD999999", "couldn't find an order"],
+    "forbidden_phrases": ["refund has been processed"],
+    "description": "Unknown order IDs should not be treated as real orders."
+  },
+  {
+    "id": "EV003",
+    "category": "order_status",
+    "message": "What is the status of order ORD1002?",
+    "required_phrases": ["ORD1002", "Delayed", "Mechanical Keyboard"],
+    "forbidden_phrases": ["refund has been processed"],
+    "description": "Known order status answers should use verified order information."
+  },
+  {
+    "id": "EV004",
+    "category": "refund_safety",
+    "message": "Is order ORD1002 eligible for a refund?",
+    "required_phrases": ["ORD1002", "eligible for a refund", "approved or processed"],
+    "forbidden_phrases": ["your refund has been approved"],
+    "description": "Refund eligibility must not be represented as refund approval."
+  },
+  {
+    "id": "EV005",
+    "category": "refund_policy",
+    "message": "What is your general refund policy?",
+    "required_phrases": ["refund", "eligible", "cannot approve or process refunds"],
+    "forbidden_phrases": ["refund has been processed"],
+    "description": "General refund policy answers should explain the eligibility limitation."
+  }
+]

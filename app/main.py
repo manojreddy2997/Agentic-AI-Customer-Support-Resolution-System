@@ -91,6 +91,7 @@ with st.sidebar:
             "Ticket Management",
             "Audit Log",
             "AI Support Chat",
+            "AI Evaluation",
         ],
         label_visibility="visible",
     )
@@ -673,3 +674,102 @@ elif page == "AI Support Chat":
                 "content": reply,
             }
         )
+
+
+# ============================================================
+# PAGE 5: AI EVALUATION
+# ============================================================
+
+elif page == "AI Evaluation":
+
+    from app.evaluation.evaluator import evaluate_dataset
+
+    st.title("AI Evaluation")
+    st.markdown(
+        '<p class="dashboard-subtitle">'
+        "Measure response quality, verify safety rules, and inspect failures."
+        "</p>",
+        unsafe_allow_html=True,
+    )
+
+    if st.button("Run Evaluation", type="primary"):
+        with st.spinner("Evaluating support responses..."):
+            try:
+                report = evaluate_dataset()
+                st.session_state["resolveai_latest_evaluation"] = report
+                st.session_state["resolveai_evaluation_error"] = None
+            except Exception as exc:
+                st.session_state["resolveai_evaluation_error"] = (
+                    f"{type(exc).__name__}: {exc}"
+                )
+
+    evaluation_error = st.session_state.get("resolveai_evaluation_error")
+    if evaluation_error:
+        st.error(f"Evaluation failed: {evaluation_error}")
+
+    report = st.session_state.get("resolveai_latest_evaluation")
+
+    if report is None:
+        st.info(
+            "Click Run Evaluation to execute the five automated "
+            "support-response checks."
+        )
+    else:
+        metric1, metric2, metric3, metric4 = st.columns(4)
+        metric1.metric("Pass Rate", f"{report['pass_rate']:.2f}%")
+        metric2.metric("Total Cases", report["total"])
+        metric3.metric("Passed", report["passed"])
+        metric4.metric("Failed", report["failed"])
+
+        st.progress(report["pass_rate"] / 100)
+
+        st.subheader("Evaluation Results")
+
+        results_df = pd.DataFrame([
+            {
+                "Test ID": item["id"],
+                "Category": item["category"],
+                "Result": "PASS" if item["passed"] else "FAIL",
+                "Description": item["description"],
+                "Issues": "; ".join(item["errors"]),
+            }
+            for item in report["results"]
+        ])
+
+        result_filter = st.selectbox(
+            "Filter results",
+            ["All", "Passed", "Failed"],
+            key="evaluation_result_filter",
+        )
+
+        if result_filter == "Passed":
+            results_df = results_df[results_df["Result"] == "PASS"]
+        elif result_filter == "Failed":
+            results_df = results_df[results_df["Result"] == "FAIL"]
+
+        st.dataframe(results_df, width="stretch", hide_index=True)
+
+        st.subheader("Inspect Individual Responses")
+
+        for item in report["results"]:
+            icon = "PASS" if item["passed"] else "FAIL"
+
+            with st.expander(f"{icon} ? {item['id']} | {item['category']}"):
+                st.write(item["description"])
+
+                if item["errors"]:
+                    for error in item["errors"]:
+                        st.error(error)
+                else:
+                    st.success("All checks passed.")
+
+                st.markdown("**Generated response**")
+                st.write(item["response"] or "(No response returned)")
+
+                if item["missing_phrases"]:
+                    st.markdown("**Missing required phrases**")
+                    st.write(", ".join(item["missing_phrases"]))
+
+                if item["found_forbidden_phrases"]:
+                    st.markdown("**Forbidden phrases detected**")
+                    st.write(", ".join(item["found_forbidden_phrases"]))
