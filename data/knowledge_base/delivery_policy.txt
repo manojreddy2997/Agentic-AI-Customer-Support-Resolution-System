@@ -1,0 +1,20 @@
+
+DELIVERY SUPPORT POLICY
+
+1. Order status
+Use the order management tool as the authoritative source for the current order status and expected delivery date.
+
+2. Delayed orders
+If an order is marked Delayed, acknowledge the inconvenience and share the available delivery information.
+
+3. Ticket escalation
+If the customer asks for escalation, requests a support ticket, or needs further assistance with a delayed order, use the support ticket tool when appropriate.
+
+4. Delivered orders
+If an order is marked Delivered, share the recorded delivery status and actual delivery date when available. If the customer says the order was not received, offer further investigation through support.
+
+5. Processing orders
+If an order is still Processing, explain the recorded expected delivery date when available. Do not describe a processing order as delayed without supporting information.
+
+6. Accurate communication
+Never invent delivery dates, shipment events, or completed actions. Clearly distinguish recorded facts from information that has not been verified.

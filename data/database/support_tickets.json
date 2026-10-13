@@ -1,0 +1,18 @@
+[
+  {
+    "ticket_id": "TKT-46693299",
+    "order_id": "ORD1002",
+    "issue": "Order is three days late",
+    "priority": "high",
+    "status": "Open",
+    "created_at": "2026-10-13T05:10:04.880298+00:00"
+  },
+  {
+    "ticket_id": "TKT-F9F1E3E7",
+    "order_id": "ORD1002",
+    "issue": "My order ORD1002 is three days late. Please open a support ticket",
+    "priority": "high",
+    "status": "Open",
+    "created_at": "2026-10-13T05:12:01.195127+00:00"
+  }
+]

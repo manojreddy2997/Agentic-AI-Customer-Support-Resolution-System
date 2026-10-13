@@ -1,0 +1,17 @@
+
+REFUND POLICY
+
+1. Refund eligibility
+A delayed order may be eligible for a refund if the order record explicitly indicates refund_eligible as true.
+
+2. Eligibility is not approval
+Refund eligibility does not mean a refund has been approved or processed. The support agent must not claim that money has been refunded unless a verified refund-processing tool confirms the transaction.
+
+3. Review requirements
+If a customer requests a refund, check the order record and explain the available information. If further review is required, create or recommend a support ticket.
+
+4. Missing information
+If the order cannot be found, ask the customer to verify the order ID. Never invent order details or refund decisions.
+
+5. Communication
+Explain refund eligibility clearly and politely. Do not invent refund amounts, processing dates, or guaranteed timelines.
