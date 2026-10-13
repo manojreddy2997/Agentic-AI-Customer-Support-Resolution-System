@@ -1,10 +1,12 @@
 
-"""Persistent support ticket creation, lookup, and status management."""
+"""Persistent support ticket creation, lookup, status management, and auditing."""
 
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
+
+from app.tools.audit_log import log_audit_event
 
 
 TICKETS_FILE = (
@@ -16,6 +18,28 @@ TICKETS_FILE = (
 
 VALID_PRIORITIES = {"low", "medium", "high"}
 VALID_STATUSES = {"Open", "In Progress", "Resolved"}
+
+
+def _record_audit_safely(
+    action: str,
+    outcome: str,
+    *,
+    order_id: str | None = None,
+    ticket_id: str | None = None,
+    details: str = "",
+) -> None:
+    """Record an audit event without breaking the ticket workflow."""
+    try:
+        log_audit_event(
+            action,
+            outcome,
+            order_id=order_id,
+            ticket_id=ticket_id,
+            details=details,
+        )
+    except Exception:
+        # Audit failures must not interrupt ticket operations.
+        pass
 
 
 def _load_tickets() -> list[dict]:
@@ -45,19 +69,32 @@ def create_ticket(
     issue: str,
     priority: str = "medium",
 ) -> dict:
-    """Create a ticket, reusing an existing open ticket for the same order."""
-
+    """Create a ticket, reusing an existing active ticket for the same order."""
     order_id = order_id.strip().upper()
     issue = issue.strip()
     priority = priority.strip().lower()
 
     if not order_id:
+        _record_audit_safely(
+            "ticket_create", "failure",
+            details="Rejected: order ID is required.",
+        )
         return {"success": False, "error": "Order ID is required."}
 
     if not issue:
+        _record_audit_safely(
+            "ticket_create", "failure",
+            order_id=order_id,
+            details="Rejected: issue description is required.",
+        )
         return {"success": False, "error": "Issue description is required."}
 
     if priority not in VALID_PRIORITIES:
+        _record_audit_safely(
+            "ticket_create", "failure",
+            order_id=order_id,
+            details="Rejected: invalid priority.",
+        )
         return {
             "success": False,
             "error": "Priority must be low, medium, or high.",
@@ -70,6 +107,13 @@ def create_ticket(
             existing["order_id"] == order_id
             and existing["status"] in {"Open", "In Progress"}
         ):
+            _record_audit_safely(
+                "ticket_reuse",
+                "success",
+                order_id=order_id,
+                ticket_id=existing["ticket_id"],
+                details="Reused an existing active ticket.",
+            )
             return {
                 "success": True,
                 "created": False,
@@ -88,6 +132,14 @@ def create_ticket(
 
     tickets.append(ticket)
     _save_tickets(tickets)
+
+    _record_audit_safely(
+        "ticket_create",
+        "success",
+        order_id=order_id,
+        ticket_id=ticket["ticket_id"],
+        details=f"Created ticket with priority {priority}.",
+    )
 
     return {"success": True, "created": True, **ticket}
 
@@ -109,11 +161,17 @@ def get_ticket(ticket_id: str) -> dict:
 
 
 def update_ticket_status(ticket_id: str, status: str) -> dict:
-    """Update a ticket's status."""
+    """Update a ticket's status and record the action."""
     ticket_id = ticket_id.strip().upper()
     status = status.strip().title()
 
     if status not in VALID_STATUSES:
+        _record_audit_safely(
+            "ticket_status_update",
+            "failure",
+            ticket_id=ticket_id or None,
+            details="Rejected: invalid status.",
+        )
         return {
             "success": False,
             "error": "Status must be Open, In Progress, or Resolved.",
@@ -123,9 +181,27 @@ def update_ticket_status(ticket_id: str, status: str) -> dict:
 
     for ticket in tickets:
         if ticket["ticket_id"] == ticket_id:
+            previous_status = ticket["status"]
             ticket["status"] = status
             ticket["updated_at"] = datetime.now(timezone.utc).isoformat()
             _save_tickets(tickets)
+
+            _record_audit_safely(
+                "ticket_status_update",
+                "success",
+                order_id=ticket.get("order_id"),
+                ticket_id=ticket_id,
+                details=(
+                    f"Status changed from {previous_status} to {status}."
+                ),
+            )
+
             return {"success": True, **ticket}
 
+    _record_audit_safely(
+        "ticket_status_update",
+        "failure",
+        ticket_id=ticket_id or None,
+        details="Ticket not found.",
+    )
     return {"success": False, "error": "Ticket not found."}
