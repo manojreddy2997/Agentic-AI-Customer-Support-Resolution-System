@@ -313,3 +313,26 @@ def test_general_refund_eligibility_question_uses_refund_policy(
     assert "approved or processed" in response.lower()
     assert "refund_policy.txt" in response
     assert "delivery_policy.txt" not in response
+
+
+def test_product_question_returns_verified_order_item(monkeypatch):
+    monkeypatch.setattr(
+        support_agent,
+        "_get_policy_context",
+        lambda message: ([], ""),
+    )
+
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError(
+            "Ollama should not be called for verified order lookup"
+        )
+
+    monkeypatch.setattr(support_agent.ollama, "chat", fail_if_called)
+
+    response = support_agent.generate_support_response(
+        "What product is in order ORD1002?"
+    )
+
+    assert "ORD1002" in response
+    assert "Mechanical Keyboard" in response
+    assert "Delayed" in response
