@@ -1,5 +1,5 @@
-
-"""ResolveAI — AI Customer Support and Resolution Dashboard."""
+﻿
+"""ResolveAI â€” AI Customer Support and Resolution Dashboard."""
 
 import pandas as pd
 import streamlit as st
@@ -16,7 +16,7 @@ from app.tools.ticket_tools import list_tickets, update_ticket_status
 
 st.set_page_config(
     page_title="ResolveAI | Support Operations",
-    page_icon="🎧",
+    page_icon="ðŸŽ§",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -80,7 +80,7 @@ st.markdown(
 # ============================================================
 
 with st.sidebar:
-    st.markdown("# 🎧 ResolveAI")
+    st.markdown("# ðŸŽ§ ResolveAI")
     st.caption("AI Customer Support Platform")
     st.divider()
 
@@ -102,11 +102,11 @@ with st.sidebar:
     st.success("Application running")
 
     st.markdown("### AI Engine")
-    st.info("Local AI · Ollama")
+    st.info("Local AI Â· Ollama")
 
     st.divider()
     st.caption("ResolveAI Portfolio Project")
-    st.caption("Demo environment · Sample order data")
+    st.caption("Demo environment Â· Sample order data")
 
 
 # ============================================================
@@ -218,7 +218,7 @@ if page == "Overview":
 
     with header_right:
         st.write("")
-        if st.button("🔄 Refresh Dashboard", width="stretch"):
+        if st.button("ðŸ”„ Refresh Dashboard", width="stretch"):
             st.rerun()
 
     st.write("")
@@ -239,7 +239,7 @@ if page == "Overview":
 
     with chart_column:
         with st.container(border=True):
-            st.subheader("🎫 Ticket Status")
+            st.subheader("ðŸŽ« Ticket Status")
             st.caption("Current distribution of tickets by status.")
 
             status_counts = pd.DataFrame(
@@ -261,7 +261,7 @@ if page == "Overview":
 
     with performance_column:
         with st.container(border=True):
-            st.subheader("📈 Resolution Performance")
+            st.subheader("ðŸ“ˆ Resolution Performance")
             st.caption("Overall resolution rate across saved tickets.")
 
             st.metric(
@@ -276,14 +276,14 @@ if page == "Overview":
 
             st.divider()
             st.markdown("**Current workload**")
-            st.write(f"🟡 Open: **{open_tickets}**")
-            st.write(f"🔵 In Progress: **{in_progress_tickets}**")
-            st.write(f"🔴 High Priority: **{high_priority_tickets}**")
+            st.write(f"ðŸŸ¡ Open: **{open_tickets}**")
+            st.write(f"ðŸ”µ In Progress: **{in_progress_tickets}**")
+            st.write(f"ðŸ”´ High Priority: **{high_priority_tickets}**")
 
     st.write("")
 
     with st.container(border=True):
-        st.subheader("⚡ Ticket Priority Breakdown")
+        st.subheader("âš¡ Ticket Priority Breakdown")
         st.caption("Understand the urgency of the current support workload.")
 
         priority_df = pd.DataFrame(
@@ -306,7 +306,7 @@ if page == "Overview":
     st.write("")
 
     with st.container(border=True):
-        st.subheader("🗂️ Recent Tickets")
+        st.subheader("ðŸ—‚ï¸ Recent Tickets")
         st.caption("The latest tickets saved in the support database.")
 
         recent_tickets = sorted(
@@ -489,7 +489,7 @@ elif page == "Audit Log":
 
     st.write("")
 
-    if st.button("🔄 Refresh Audit Log"):
+    if st.button("ðŸ”„ Refresh Audit Log"):
         st.rerun()
 
     try:
@@ -609,16 +609,16 @@ elif page == "AI Support Chat":
         st.markdown("**Supported workflows**")
         workflow1, workflow2, workflow3 = st.columns(3)
 
-        workflow1.markdown("📦 Order tracking")
-        workflow2.markdown("💳 Refund questions")
-        workflow3.markdown("🎫 Ticket creation")
+        workflow1.markdown("ðŸ“¦ Order tracking")
+        workflow2.markdown("ðŸ’³ Refund questions")
+        workflow3.markdown("ðŸŽ« Ticket creation")
 
     if "messages" not in st.session_state:
         st.session_state.messages = [
             {
                 "role": "assistant",
                 "content": (
-                    "Hello! 👋 Welcome to ResolveAI. "
+                    "Hello! ðŸ‘‹ Welcome to ResolveAI. "
                     "Describe your support issue or provide "
                     "your order ID, and I'll help you."
                 ),
@@ -683,6 +683,10 @@ elif page == "AI Support Chat":
 elif page == "AI Evaluation":
 
     from app.evaluation.evaluator import evaluate_dataset
+    from app.evaluation.history import (
+        load_evaluation_history,
+        save_evaluation_report,
+    )
 
     st.title("AI Evaluation")
     st.markdown(
@@ -696,6 +700,8 @@ elif page == "AI Evaluation":
         with st.spinner("Evaluating support responses..."):
             try:
                 report = evaluate_dataset()
+                save_evaluation_report(report)
+
                 st.session_state["resolveai_latest_evaluation"] = report
                 st.session_state["resolveai_evaluation_error"] = None
             except Exception as exc:
@@ -711,7 +717,7 @@ elif page == "AI Evaluation":
 
     if report is None:
         st.info(
-            "Click Run Evaluation to execute the five automated "
+            "Click Run Evaluation to execute the automated "
             "support-response checks."
         )
     else:
@@ -721,7 +727,7 @@ elif page == "AI Evaluation":
         metric3.metric("Passed", report["passed"])
         metric4.metric("Failed", report["failed"])
 
-        st.progress(report["pass_rate"] / 100)
+        st.progress(max(0.0, min(1.0, report["pass_rate"] / 100)))
 
         st.subheader("Evaluation Results")
 
@@ -752,9 +758,11 @@ elif page == "AI Evaluation":
         st.subheader("Inspect Individual Responses")
 
         for item in report["results"]:
-            icon = "PASS" if item["passed"] else "FAIL"
+            status = "PASS" if item["passed"] else "FAIL"
 
-            with st.expander(f"{icon} ? {item['id']} | {item['category']}"):
+            with st.expander(
+                f"{status} | {item['id']} | {item['category']}"
+            ):
                 st.write(item["description"])
 
                 if item["errors"]:
@@ -773,3 +781,56 @@ elif page == "AI Evaluation":
                 if item["found_forbidden_phrases"]:
                     st.markdown("**Forbidden phrases detected**")
                     st.write(", ".join(item["found_forbidden_phrases"]))
+
+    # Persistent evaluation history
+    st.divider()
+    st.subheader("Evaluation History")
+
+    try:
+        history = load_evaluation_history()
+    except Exception as exc:
+        history = []
+        st.warning(
+            f"Could not read evaluation history: "
+            f"{type(exc).__name__}: {exc}"
+        )
+
+    if not history:
+        st.info(
+            "No saved evaluation runs yet. Click Run Evaluation "
+            "to create your first history record."
+        )
+    else:
+        history_df = pd.DataFrame([
+            {
+                "Run": index,
+                "Timestamp (UTC)": record.get("timestamp", "Unknown"),
+                "Pass Rate (%)": record.get("pass_rate", 0.0),
+                "Total": record.get("total", 0),
+                "Passed": record.get("passed", 0),
+                "Failed": record.get("failed", 0),
+            }
+            for index, record in enumerate(history, start=1)
+        ])
+
+        st.markdown("**Pass-rate trend (%)**")
+        chart_df = history_df[["Run", "Pass Rate (%)"]].set_index("Run")
+
+        st.line_chart(
+            chart_df,
+            y="Pass Rate (%)",
+            y_label="Pass rate (%)",
+            x_label="Evaluation run",
+        )
+
+        st.markdown("**Previous evaluation runs**")
+        st.dataframe(
+            history_df.iloc[::-1],
+            width="stretch",
+            hide_index=True,
+        )
+
+        st.caption(
+            "History is stored locally in "
+            "data/evaluation/history.jsonl. Timestamps are in UTC."
+        )

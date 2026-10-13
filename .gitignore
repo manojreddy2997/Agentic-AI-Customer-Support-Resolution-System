@@ -21,3 +21,6 @@ Thumbs.db
 
 # Runtime audit log
 data/database/audit_log.jsonl
+
+# Local AI evaluation history
+data/evaluation/history.jsonl
