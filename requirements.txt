@@ -1,4 +1,5 @@
 streamlit
 ollama
 python-dotenv
+pandas
 pytest
