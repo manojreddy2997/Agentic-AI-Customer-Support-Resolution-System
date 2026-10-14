@@ -1,6 +1,7 @@
 
 """Persistent support ticket creation, lookup, status management, and auditing."""
-
+import logging
+logger = logging.getLogger(__name__)
 import json
 from datetime import datetime, timezone
 from pathlib import Path
