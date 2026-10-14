@@ -21,7 +21,9 @@ The project combines a local large language model (LLM), policy-based retrieval,
 The application includes six dashboard pages:
 
 1. **Overview** — View key support metrics.
-![ResolveAI Dashboard Overview](assets/dashboard-overview.png)
+
+   ![ResolveAI Dashboard Overview](assets/dashboard-overview.png)
+
 2. **Ticket Management** — Review and manage support tickets.
 3. **Audit Log** — Inspect recorded application activities.
 4. **AI Support Chat** — Interact with the AI support assistant.
@@ -171,7 +173,13 @@ Run the automated test suite from the project root:
 python -m pytest
 ```
 
-The latest recorded local test run passed **60 tests**. Run the command above in your own environment to verify the current result.
+The current automated test suite contains **61 passing tests**, including regression coverage for audit logging failures. Run the command above to verify the results in your own environment.
+
+## Continuous Integration
+
+GitHub Actions runs the automated test suite when changes are pushed to the repository or submitted through a pull request.
+
+The workflow is defined in `.github/workflows/tests.yml` and helps catch regressions before changes are merged.
 
 ## Current Limitations
 
@@ -184,12 +192,12 @@ The latest recorded local test run passed **60 tests**. Run the command above in
 
 ## Future Improvements
 
-- Add automated CI testing with GitHub Actions.
-- Improve retrieval evaluation and response-quality monitoring.
+- Improve policy retrieval and evaluate retrieval relevance across a broader test dataset.
+- Expand response-quality evaluation and monitoring.
 - Add authenticated users and role-based access controls.
-- Integrate approved external support systems.
-- Expand test coverage for tool failures and safety scenarios.
-
+- Integrate approved external customer support systems.
+- Expand regression tests for tool failures, audit logging, and safety scenarios.
+- Extend CI to test multiple supported Python versions.
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

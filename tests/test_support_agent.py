@@ -52,7 +52,42 @@ def test_create_ticket_and_persist(monkeypatch, tmp_path):
     assert len(saved_data) == 1
     assert saved_data[0]["ticket_id"] == result["ticket_id"]
 
+def test_ticket_creation_survives_audit_logging_failure(
+    monkeypatch,
+    tmp_path,
+    caplog,
+):
+    database_file = tmp_path / "support_tickets.json"
+    monkeypatch.setattr(ticket_tools, "TICKETS_FILE", database_file)
 
+    def fail_audit_logging(*args, **kwargs):
+        raise OSError("Simulated audit log failure")
+
+    monkeypatch.setattr(
+        ticket_tools,
+        "log_audit_event",
+        fail_audit_logging,
+    )
+
+    with caplog.at_level("ERROR", logger="app.tools.ticket_tools"):
+        result = ticket_tools.create_ticket(
+            order_id="ORD1002",
+            issue="Delayed delivery",
+            priority="high",
+        )
+
+    # The ticket operation should succeed despite the audit failure.
+    assert result["success"] is True
+    assert result["created"] is True
+
+    # The ticket must still be persisted.
+    saved_data = json.loads(database_file.read_text(encoding="utf-8"))
+    assert len(saved_data) == 1
+    assert saved_data[0]["ticket_id"] == result["ticket_id"]
+
+    # The audit failure must be visible in application logs.
+    assert "Failed to record audit event" in caplog.text
+    assert "Simulated audit log failure" in caplog.text
 def test_reject_empty_ticket_issue(monkeypatch, tmp_path):
     monkeypatch.setattr(
         ticket_tools, "TICKETS_FILE",

@@ -1,14 +1,15 @@
-
 """Persistent support ticket creation, lookup, status management, and auditing."""
-import logging
-logger = logging.getLogger(__name__)
+
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
 from app.tools.audit_log import log_audit_event
 
+
+logger = logging.getLogger(__name__)
 
 TICKETS_FILE = (
     Path(__file__).resolve().parents[2]
@@ -39,10 +40,12 @@ def _record_audit_safely(
             details=details,
         )
     except Exception:
-        # Audit failures must not interrupt ticket operations.
-        pass
-
-
+        # Keep ticket operations running, but make audit failures observable.
+        logger.exception(
+            "Failed to record audit event: action=%s outcome=%s",
+            action,
+            outcome,
+        )
 def _load_tickets() -> list[dict]:
     TICKETS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
