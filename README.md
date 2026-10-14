@@ -21,6 +21,7 @@ The project combines a local large language model (LLM), policy-based retrieval,
 The application includes six dashboard pages:
 
 1. **Overview** — View key support metrics.
+![ResolveAI Dashboard Overview](assets/dashboard-overview.png)
 2. **Ticket Management** — Review and manage support tickets.
 3. **Audit Log** — Inspect recorded application activities.
 4. **AI Support Chat** — Interact with the AI support assistant.
