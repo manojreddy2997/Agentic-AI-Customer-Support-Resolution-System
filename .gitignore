@@ -24,3 +24,10 @@ data/database/audit_log.jsonl
 
 # Local AI evaluation history
 data/evaluation/history.jsonl
+
+
+# Local runtime ticket data
+data/database/support_tickets.json
+
+# Temporary evaluation backups
+data/evaluation/*.bak
