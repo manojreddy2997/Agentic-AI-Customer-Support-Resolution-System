@@ -503,11 +503,104 @@ def evaluate_dataset(
     }
 
 
-if __name__ == "__main__":
-    print(
-        json.dumps(
-            evaluate_dataset(),
-            indent=2,
-            ensure_ascii=False,
-        )
+
+def evaluate_dataset(
+    dataset_path: str | Path = DEFAULT_DATASET,
+) -> dict[str, Any]:
+    """Evaluate the dataset and return functional and quality metrics."""
+    cases = load_test_cases(dataset_path)
+    results = [evaluate_case(case) for case in cases]
+
+    total = len(results)
+    passed = sum(result["passed"] for result in results)
+    failed = total - passed
+
+    review_required = sum(
+        bool(result.get("review_reasons"))
+        for result in results
     )
+
+    pass_rate = round((passed / total) * 100, 2) if total else 0.0
+
+    def quality_status_count(check_name: str, status: str) -> int:
+        """Count results with a specific quality-check status."""
+        return sum(
+            result.get("quality", {})
+            .get(check_name, {})
+            .get("status") == status
+            for result in results
+        )
+
+    def assessed_rate(check_name: str) -> float | None:
+        """Calculate pass rate among assessed checks only."""
+        check_passed = quality_status_count(check_name, "pass")
+        check_failed = quality_status_count(check_name, "fail")
+        assessed = check_passed + check_failed
+
+        if not assessed:
+            return None
+
+        return round((check_passed / assessed) * 100, 2)
+
+    safety_violations = sum(
+        bool(
+            result.get("quality", {})
+            .get("safety", {})
+            .get("flagged_claims")
+        )
+        for result in results
+    )
+
+    return {
+        "total": total,
+        "passed": passed,
+        "failed": failed,
+        "pass_rate": pass_rate,
+        "review_required": review_required,
+        "quality_metrics": {
+            "relevance": {
+                "passed": quality_status_count("relevance", "pass"),
+                "failed": quality_status_count("relevance", "fail"),
+                "review_required": quality_status_count(
+                    "relevance", "review_required"
+                ),
+                "not_assessed": quality_status_count(
+                    "relevance", "not_assessed"
+                ),
+                "pass_rate": assessed_rate("relevance"),
+            },
+            "groundedness": {
+                "passed": quality_status_count("groundedness", "pass"),
+                "failed": quality_status_count("groundedness", "fail"),
+                "not_assessed": quality_status_count(
+                    "groundedness", "not_assessed"
+                ),
+                "pass_rate": assessed_rate("groundedness"),
+            },
+            "safety": {
+                "passed": quality_status_count("safety", "pass"),
+                "failed": quality_status_count("safety", "fail"),
+                "not_assessed": quality_status_count(
+                    "safety", "not_assessed"
+                ),
+                "violation_count": safety_violations,
+                "violation_rate": (
+                    round((safety_violations / total) * 100, 2)
+                    if total else 0.0
+                ),
+            },
+            "verified_order_facts": {
+                "passed": quality_status_count(
+                    "verified_order_facts", "pass"
+                ),
+                "failed": quality_status_count(
+                    "verified_order_facts", "fail"
+                ),
+                "not_assessed": quality_status_count(
+                    "verified_order_facts", "not_assessed"
+                ),
+                "pass_rate": assessed_rate("verified_order_facts"),
+            },
+        },
+        "results": results,
+    }

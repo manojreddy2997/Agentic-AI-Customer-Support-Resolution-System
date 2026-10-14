@@ -24,6 +24,8 @@ def save_evaluation_report(
         "passed": int(report.get("passed", 0)),
         "failed": int(report.get("failed", 0)),
         "pass_rate": float(report.get("pass_rate", 0.0)),
+        "review_required": int(report.get("review_required", 0)),
+        "quality_metrics": report.get("quality_metrics", {}),
         "results": report.get("results", []),
     }
 

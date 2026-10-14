@@ -656,11 +656,18 @@ elif page == "AI Evaluation":
             "Click Run Evaluation to execute the automated support-response checks."
         )
     else:
-        metric1, metric2, metric3, metric4 = st.columns(4)
+        metric1, metric2, metric3, metric4, metric5 = st.columns(5)
         metric1.metric("Pass Rate", f"{report['pass_rate']:.2f}%")
         metric2.metric("Total Cases", report["total"])
         metric3.metric("Passed", report["passed"])
         metric4.metric("Failed", report["failed"])
+        metric5.metric(
+            "Needs Review",
+            report.get("review_required", 0),
+            help="Cases with quality checks that require human review.",
+    )
+
+
 
         st.progress(max(0.0, min(1.0, report["pass_rate"] / 100)))
 
@@ -1338,18 +1345,19 @@ elif page == "AI Evaluation":
         )
     else:
         history_df = pd.DataFrame(
-            [
-                {
-                    "Run": index,
-                    "Timestamp (UTC)": record.get("timestamp", "Unknown"),
-                    "Pass Rate (%)": record.get("pass_rate", 0.0),
-                    "Total": record.get("total", 0),
-                    "Passed": record.get("passed", 0),
-                    "Failed": record.get("failed", 0),
-                }
-                for index, record in enumerate(history, start=1)
-            ]
-        )
+    [
+        {
+            "Run": index,
+            "Timestamp (UTC)": record.get("timestamp", "Unknown"),
+            "Pass Rate (%)": record.get("pass_rate", 0.0),
+            "Total": record.get("total", 0),
+            "Passed": record.get("passed", 0),
+            "Failed": record.get("failed", 0),
+            "Needs Review": record.get("review_required", 0),
+        }
+        for index, record in enumerate(history, start=1)
+    ]
+)
 
         st.markdown("**Pass-rate trend (%)**")
         chart_df = history_df[["Run", "Pass Rate (%)"]].set_index("Run")

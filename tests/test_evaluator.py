@@ -153,3 +153,79 @@ def test_evaluate_dataset_calculates_pass_rate(monkeypatch, tmp_path):
     assert report["passed"] == 1
     assert report["failed"] == 1
     assert report["pass_rate"] == 50.0
+
+def test_evaluate_dataset_reports_quality_metrics(monkeypatch, tmp_path):
+    import app.evaluation.evaluator as evaluator
+
+    dataset = tmp_path / "quality_cases.json"
+    dataset.write_text(
+        json.dumps([
+            {
+                "id": "QUALITY001",
+                "message": "Where is my order?",
+                "required_phrases": ["delayed"],
+                "forbidden_phrases": [],
+                "evidence": ["The order status is delayed."],
+                "grounding_phrases": ["delayed"],
+            },
+            {
+                "id": "QUALITY002",
+                "message": "Where is my order?",
+                "required_phrases": ["delayed"],
+                "forbidden_phrases": [],
+                "evidence": ["The order status is delayed."],
+                "grounding_phrases": ["delayed"],
+            },
+        ]),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        evaluator,
+        "generate_support_response",
+        lambda _message: "Your order is delayed.",
+    )
+
+    report = evaluator.evaluate_dataset(dataset)
+
+    assert report["total"] == 2
+    assert report["passed"] == 2
+    assert report["pass_rate"] == 100.0
+
+    metrics = report["quality_metrics"]
+    assert metrics["relevance"]["passed"] == 2
+    assert metrics["groundedness"]["passed"] == 2
+    assert metrics["groundedness"]["pass_rate"] == 100.0
+    assert metrics["safety"]["violation_count"] == 0
+
+
+def test_quality_pass_rate_excludes_not_assessed_checks(
+    monkeypatch,
+    tmp_path,
+):
+    import app.evaluation.evaluator as evaluator
+
+    dataset = tmp_path / "unassessed_cases.json"
+    dataset.write_text(
+        json.dumps([
+            {
+                "id": "ASSESS001",
+                "message": "Check order ORD999999",
+                "required_phrases": [],
+                "forbidden_phrases": [],
+            },
+        ]),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        evaluator,
+        "generate_support_response",
+        lambda _message: "I couldn't find an order with that ID.",
+    )
+
+    report = evaluator.evaluate_dataset(dataset)
+
+    metrics = report["quality_metrics"]
+    assert metrics["verified_order_facts"]["not_assessed"] == 1
+    assert metrics["verified_order_facts"]["pass_rate"] is None
