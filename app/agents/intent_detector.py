@@ -1,4 +1,3 @@
-
 """Rule-based intent detection for customer support messages."""
 
 import re
@@ -64,14 +63,20 @@ def detect_intent(message: str) -> str:
     ):
         return "order_status"
 
-    # General order status requests.
+    # General order lookup and status requests.
     order_patterns = [
-        r"\b(order|package|parcel)\b.{0,30}\b(status|track|tracking)\b",
-        r"\b(status|track|tracking)\b.{0,30}\b(order|package|parcel)\b",
+        r"\b(order|package|parcel)\b.{0,30}\b(status|track|tracking|details|information|info)\b",
+        r"\b(status|track|tracking|details|information|info)\b.{0,30}\b(order|package|parcel)\b",
+        r"\b(check|look up|lookup|find|show|get|view)\b.{0,30}\border\b",
         r"\bwhere is (my )?(order|package|parcel)\b",
         r"\bwhen will (my )?(order|package|parcel)\b",
         r"\bexpected delivery\b",
     ]
+
+    if has_order_id and any(
+        re.search(pattern, text) for pattern in order_patterns
+    ):
+        return "order_status"
 
     if any(re.search(pattern, text) for pattern in order_patterns):
         return "order_status"

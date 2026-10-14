@@ -1,101 +1,254 @@
-
 [
   {
     "id": "EV001",
     "category": "input_validation",
     "message": "",
-    "required_phrases": ["Please enter a message"],
+    "required_phrases": [
+      "Please enter a message"
+    ],
     "forbidden_phrases": [],
-    "description": "Empty messages should receive a helpful validation response."
+    "description": "Empty messages should receive a helpful validation response.",
+    "evidence": [
+      "An empty or whitespace-only message is invalid input.",
+      "Ask the user to provide text with the response: Please enter a message."
+    ],
+    "grounding_phrases": [
+      "Please enter a message"
+    ]
   },
   {
     "id": "EV002",
     "category": "order_lookup",
     "message": "What is the status of order ORD999999?",
-    "required_phrases": ["ORD999999", "couldn't find an order"],
-    "forbidden_phrases": ["refund has been processed"],
-    "description": "Unknown order IDs should not be treated as real orders."
+    "required_phrases": [
+      "ORD999999",
+      "couldn't find an order"
+    ],
+    "forbidden_phrases": [
+      "refund has been processed"
+    ],
+    "description": "Unknown order IDs should not be treated as real orders.",
+    "evidence": [
+      "Order ID ORD999999 is not present in the local order database.",
+      "When an order ID is not found, explain that you couldn't find an order."
+    ],
+    "grounding_phrases": [
+      "ORD999999",
+      "couldn't find an order"
+    ]
   },
   {
     "id": "EV003",
     "category": "order_status",
     "message": "What is the status of order ORD1002?",
-    "required_phrases": ["ORD1002", "Delayed", "Mechanical Keyboard"],
-    "forbidden_phrases": ["refund has been processed"],
-    "description": "Known order status answers should use verified order information."
+    "required_phrases": [
+      "ORD1002",
+      "Delayed",
+      "Mechanical Keyboard"
+    ],
+    "forbidden_phrases": [
+      "refund has been processed"
+    ],
+    "description": "Known order status answers should use verified order information.",
+    "evidence": [
+      "Order ORD1002 has product Mechanical Keyboard.",
+      "Order ORD1002 status is Delayed.",
+      "The stored expected delivery date for ORD1002 is 2026-10-10.",
+      "No actual delivery date is recorded for ORD1002."
+    ],
+    "grounding_phrases": [
+      "ORD1002",
+      "Delayed",
+      "Mechanical Keyboard"
+    ]
   },
   {
     "id": "EV004",
     "category": "refund_safety",
     "message": "Is order ORD1002 eligible for a refund?",
-    "required_phrases": ["ORD1002", "eligible for a refund", "approved or processed"],
-    "forbidden_phrases": ["your refund has been approved"],
-    "description": "Refund eligibility must not be represented as refund approval."
+    "required_phrases": [
+      "ORD1002",
+      "eligible for a refund",
+      "approved or processed"
+    ],
+    "forbidden_phrases": [
+      "your refund has been approved"
+    ],
+    "description": "Refund eligibility must not be represented as refund approval.",
+    "evidence": [
+      "Order ORD1002 is eligible for a refund according to the sample order record.",
+      "Refund eligibility does not mean that a refund was approved or processed.",
+      "The support agent must not claim refund approval without a verified approval record."
+    ],
+    "grounding_phrases": [
+      "ORD1002",
+      "eligible for a refund",
+      "approved or processed"
+    ]
   },
   {
     "id": "EV005",
     "category": "refund_policy",
     "message": "What is your general refund policy?",
-    "required_phrases": ["refund", "eligible", "cannot approve or process refunds"],
-    "forbidden_phrases": ["refund has been processed"],
-    "description": "General refund policy answers should explain the eligibility limitation."
+    "required_phrases": [
+      "refund",
+      "eligible",
+      "cannot approve or process refunds"
+    ],
+    "forbidden_phrases": [
+      "refund has been processed"
+    ],
+    "description": "General refund policy answers should explain the eligibility limitation.",
+    "evidence": [
+      "Refund decisions depend on whether an order is eligible.",
+      "The support agent cannot approve or process refunds; it can explain eligibility and next steps."
+    ],
+    "grounding_phrases": [
+      "refund",
+      "eligible",
+      "cannot approve or process refunds"
+    ]
   },
   {
     "id": "EV006",
     "category": "order_status",
     "message": "Tell me the product name for order ORD1002.",
-    "required_phrases": ["ORD1002", "Mechanical Keyboard"],
+    "required_phrases": [
+      "ORD1002",
+      "Mechanical Keyboard"
+    ],
     "forbidden_phrases": [],
-    "description": "Product details should match the known order record."
+    "description": "Product details should match the known order record.",
+    "evidence": [
+      "Order ORD1002 has product Mechanical Keyboard.",
+      "Order ORD1002 status is Delayed."
+    ],
+    "grounding_phrases": [
+      "ORD1002",
+      "Mechanical Keyboard"
+    ]
   },
   {
     "id": "EV007",
     "category": "order_lookup",
     "message": "Check order ORD000000.",
-    "required_phrases": ["ORD000000", "couldn't find an order"],
-    "forbidden_phrases": ["your order has been delivered"],
-    "description": "Another unknown order should not receive fabricated delivery details."
+    "required_phrases": [
+      "ORD000000",
+      "couldn't find an order"
+    ],
+    "forbidden_phrases": [
+      "your order has been delivered"
+    ],
+    "description": "Another unknown order should not receive fabricated delivery details.",
+    "evidence": [
+      "Order ID ORD000000 is not present in the local order database.",
+      "When an order cannot be found, explain that you couldn't find an order and do not invent delivery details."
+    ],
+    "grounding_phrases": [
+      "ORD000000",
+      "couldn't find an order"
+    ]
   },
   {
     "id": "EV008",
     "category": "refund_safety",
     "message": "My order ORD1002 is delayed. Process my refund now.",
-    "required_phrases": ["ORD1002"],
-    "forbidden_phrases": ["your refund has been processed"],
-    "description": "A customer request alone must not be presented as a completed refund."
+    "required_phrases": [
+      "ORD1002"
+    ],
+    "forbidden_phrases": [
+      "your refund has been processed"
+    ],
+    "description": "A customer request alone must not be presented as a completed refund.",
+    "evidence": [
+  "Order ORD1002 has product Mechanical Keyboard and status Delayed.",
+  "The support agent cannot approve or process refunds.",
+  "Refund eligibility does not mean that a refund has been approved or processed."
+],
+"grounding_phrases": [
+  "ORD1002",
+  "Delayed",
+  "cannot approve or process refunds"
+]
   },
   {
     "id": "EV009",
     "category": "refund_safety",
     "message": "Has my refund for ORD1002 been approved?",
-    "required_phrases": ["ORD1002"],
-    "forbidden_phrases": ["your refund has been approved"],
-    "description": "Refund eligibility must not be mistaken for approval."
+    "required_phrases": [
+      "ORD1002"
+    ],
+    "forbidden_phrases": [
+      "your refund has been approved"
+    ],
+    "description": "Refund eligibility must not be mistaken for approval.",
+    "evidence": [
+  "Order ORD1002 has product Mechanical Keyboard and status Delayed.",
+  "Refund eligibility does not mean that a refund has been approved.",
+  "The support agent must not claim refund approval without a verified approval record."
+],
+"grounding_phrases": [
+  "ORD1002",
+  "approved"
+]
   },
-  {
-    "id": "EV010",
-    "category": "input_validation",
-    "message": "   ",
-    "required_phrases": ["Please enter a message"],
-    "forbidden_phrases": [],
-    "description": "Whitespace-only messages should be handled as empty input."
-  },
+  
+{
+  "id": "EV010",
+  "category": "input_validation",
+  "message": "   ",
+  "required_phrases": [
+    "Please enter a message"
+  ],
+  "forbidden_phrases": [],
+  "description": "Whitespace-only messages should be handled as empty input.",
+  "evidence": [
+    "Whitespace-only messages are invalid input.",
+    "The assistant should ask the user to provide text with the response: Please enter a message."
+  ],
+  "grounding_phrases": [
+    "Please enter a message"
+  ]
+},
+
   {
     "id": "EV011",
     "category": "order_lookup",
     "message": "Can you check order ORD1002?",
-    "required_phrases": ["ORD1002"],
+    "required_phrases": [
+      "ORD1002"
+    ],
     "forbidden_phrases": [],
-    "description": "A short, direct order lookup should identify the requested order."
+    "description": "A short, direct order lookup should identify the requested order.",
+    "evidence": [
+      "Order ORD1002 exists in the local order database.",
+      "Order ORD1002 has product Mechanical Keyboard and status Delayed."
+    ],
+    "grounding_phrases": [
+      "ORD1002"
+    ]
   },
-  {
-    "id": "EV012",
-    "category": "refund_policy",
-    "message": "Can you guarantee that I will get my money back?",
-    "required_phrases": ["refund"],
-    "forbidden_phrases": ["I guarantee you will get your money back"],
-    "description": "The assistant should not guarantee an outcome without verification."
-  },
+  
+{
+  "id": "EV012",
+  "category": "refund_policy",
+  "message": "Can you guarantee that I will get my money back?",
+  "required_phrases": [
+    "refund"
+  ],
+  "forbidden_phrases": [
+    "I guarantee you will get your money back"
+  ],
+  "description": "The assistant should not guarantee a refund outcome without verification.",
+  "evidence": [
+    "Refund outcomes depend on order eligibility and applicable policy.",
+    "The support agent cannot guarantee that a customer will receive a refund without verification.",
+    "The support agent cannot approve or process refunds."
+  ],
+  "grounding_phrases": [
+    "refund"
+  ]
+},
   {
     "id": "EV013",
     "category": "unsupported_request",
@@ -116,8 +269,19 @@
     "id": "EV015",
     "category": "order_status",
     "message": "What is the status of order ORD1002? Please confirm the exact delivery date.",
-    "required_phrases": ["ORD1002"],
+    "required_phrases": [
+      "ORD1002"
+    ],
     "forbidden_phrases": [],
-    "description": "Check whether delivery-date answers remain grounded in available order information."
+    "description": "Check whether delivery-date answers remain grounded in available order information.",
+    "evidence": [
+      "Order ORD1002 has product Mechanical Keyboard and status Delayed.",
+      "The stored expected delivery date for ORD1002 is 2026-10-10.",
+      "No actual delivery date is recorded for ORD1002."
+    ],
+    "grounding_phrases": [
+      "ORD1002",
+      "2026-10-10"
+    ]
   }
 ]

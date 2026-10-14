@@ -110,10 +110,12 @@ def _is_general_refund_policy_question(
     return intent in ("refund_inquiry", "general_question")
 
 
+
 def _answer_general_refund_policy(
     policy_results: list[dict],
+    message: str = "",
 ) -> str | None:
-    """Answer directly from the refund policy when it was retrieved."""
+    """Answer refund-policy questions clearly using retrieved policy."""
     refund_policy_found = any(
         item["source"] == "refund_policy.txt"
         for item in policy_results
@@ -122,15 +124,33 @@ def _answer_general_refund_policy(
     if not refund_policy_found:
         return None
 
-    return (
-        "Our refund policy states that a delayed order may be eligible "
-        "for a refund when its order record explicitly marks "
-        "`refund_eligible` as true. Eligibility does not mean a refund "
-        "has been approved or processed. To check a specific order, "
-        "please provide your order ID. This application cannot approve "
-        "or process refunds.\n\n"
-        "Policy sources consulted: refund_policy.txt"
+    asks_for_guarantee = bool(
+        re.search(
+            r"\b(guarantee|guaranteed|promise|certain|definitely)\b",
+            message,
+            re.IGNORECASE,
+        )
     )
+
+    if asks_for_guarantee:
+        answer = (
+            "I can't guarantee that you'll receive a refund. "
+            "Refund eligibility depends on your order record and the "
+            "applicable policy. If you share your order ID, I can check "
+            "the available order information. This application cannot "
+            "approve or process refunds."
+        )
+    else:
+        answer = (
+            "Our refund policy states that a delayed order may be eligible "
+            "for a refund when its order record explicitly marks "
+            "`refund_eligible` as true. Eligibility does not mean a refund "
+            "has been approved or processed. To check a specific order, "
+            "please provide your order ID. This application cannot approve "
+            "or process refunds."
+        )
+
+    return answer + "\n\nPolicy sources consulted: refund_policy.txt"
 
 
 def generate_support_response(message: str) -> str:
@@ -249,7 +269,10 @@ def generate_support_response(message: str) -> str:
 
     # Step 6: Use a controlled answer for general refund-policy questions.
     if _is_general_refund_policy_question(message, intent, order):
-        refund_answer = _answer_general_refund_policy(policy_results)
+        refund_answer = _answer_general_refund_policy(
+    policy_results,
+    message,
+)
         if refund_answer is not None:
             return refund_answer
 
