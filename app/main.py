@@ -207,7 +207,7 @@ if page == "Overview":
             st.rerun()
 
     st.write("")
-    
+
     metric1, metric2, metric3, metric4, metric5 = st.columns(5)
     metric1.metric("Total Tickets", total_tickets)
     metric2.metric("Resolved", resolved_tickets)
@@ -833,7 +833,7 @@ elif page == "AI Evaluation":
                 "These are targeted deterministic checks. They do not prove "
                 "that every sentence is relevant, safe, or factual."
             )
-        
+
         # Grounding Coverage Investigation
         st.divider()
         st.subheader("Grounding Coverage Investigation")
@@ -941,7 +941,7 @@ elif page == "AI Evaluation":
                             item.get("response") or "(No response returned)"
                         )
 
-        
+
         # Manual Review Queue
         st.divider()
         st.subheader("Manual Review Queue")
@@ -976,7 +976,7 @@ elif page == "AI Evaluation":
                 with st.expander(f"{case_id} | {category}"):
                     st.markdown("**Scenario**")
                     st.write(item.get("description", ""))
-                    
+
                     review_reasons = item.get("review_reasons", [])
 
                     st.markdown("**Why this case needs review**")
@@ -1049,7 +1049,7 @@ elif page == "AI Evaluation":
             results_df = results_df[results_df["Result"] == "FAIL"]
 
         st.dataframe(results_df, width="stretch", hide_index=True)
-        
+
          # AI Failure Analysis & Investigation Report
         st.divider()
         st.subheader("AI Failure Analysis & Investigation")
@@ -1429,7 +1429,14 @@ elif page == "Performance Analytics":
     )
 
     st.divider()
+
     st.subheader("AI Response Quality")
+
+    from app.evaluation.history import load_evaluation_history
+    from app.evaluation.trends import (
+        build_evaluation_trend_rows,
+        compare_evaluation_runs,
+    )
 
     try:
         history = load_evaluation_history()
@@ -1441,45 +1448,198 @@ elif page == "Performance Analytics":
         )
 
     if history:
-        latest = history[-1]
-        total_runs = len(history)
-        average_pass_rate = sum(
-            float(record.get("pass_rate", 0)) for record in history
-        ) / total_runs
+        comparison = compare_evaluation_runs(history)
+        latest = comparison["latest"]
 
-        metric1, metric2, metric3 = st.columns(3)
-        metric1.metric(
-            "Latest Pass Rate",
-            f"{float(latest.get('pass_rate', 0)):.1f}%",
+        def display_rate(value):
+            return f"{value:.1f}%" if isinstance(value, (int, float)) else "N/A"
+
+        def display_count(value):
+            return str(int(value)) if isinstance(value, (int, float)) else "N/A"
+
+        # Latest evaluation overview
+        total_runs = len(history)
+        valid_pass_rates = [
+            record["pass_rate"]
+            for record in history
+            if isinstance(record.get("pass_rate"), (int, float))
+            and not isinstance(record.get("pass_rate"), bool)
+        ]
+        average_pass_rate = (
+            sum(valid_pass_rates) / len(valid_pass_rates)
+            if valid_pass_rates
+            else None
         )
-        metric2.metric(
-            "Latest Tests Passed",
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric(
+            "Latest Pass Rate",
+            display_rate(latest.get("pass_rate")),
+        )
+        col2.metric(
+            "Tests Passed",
             f"{latest.get('passed', 0)} / {latest.get('total', 0)}",
         )
-        metric3.metric("Average Pass Rate", f"{average_pass_rate:.1f}%")
+        col3.metric(
+            "Average Pass Rate",
+            display_rate(average_pass_rate),
+        )
+        col4.metric("Evaluation Runs", total_runs)
 
-        trend_df = pd.DataFrame(
-            [
-                {
-                    "Run": index,
-                    "Pass Rate (%)": float(record.get("pass_rate", 0)),
-                }
-                for index, record in enumerate(history, start=1)
+        # Latest run compared with the previous run
+        st.markdown("#### Latest Run vs Previous Run")
+
+        if comparison["previous"] is not None:
+            changes = comparison["changes"]
+
+            def format_delta(value, suffix=" pp"):
+                if value is None:
+                    return None
+                return f"{value:+.1f}{suffix}"
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric(
+                "Overall Pass Rate",
+                display_rate(changes["pass_rate"]["latest"]),
+                delta=format_delta(changes["pass_rate"]["delta"]),
+                delta_color="normal",
+            )
+            col2.metric(
+                "Relevance",
+                display_rate(changes["relevance"]["latest"]),
+                delta=format_delta(changes["relevance"]["delta"]),
+                delta_color="normal",
+            )
+            col3.metric(
+                "Groundedness",
+                display_rate(changes["groundedness"]["latest"]),
+                delta=format_delta(changes["groundedness"]["delta"]),
+                delta_color="normal",
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric(
+                "Verified Order Facts",
+                display_rate(changes["verified_order_facts"]["latest"]),
+                delta=format_delta(
+                    changes["verified_order_facts"]["delta"]
+                ),
+                delta_color="normal",
+            )
+            col2.metric(
+                "Cases Requiring Review",
+                display_count(changes["review_required"]["latest"]),
+                delta=format_delta(
+                    changes["review_required"]["delta"], " cases"
+                ),
+                delta_color="inverse",
+            )
+            col3.metric(
+                "Safety Violations",
+                display_count(changes["safety_violations"]["latest"]),
+                delta=format_delta(
+                    changes["safety_violations"]["delta"], " violations"
+                ),
+                delta_color="inverse",
+            )
+        else:
+            st.info(
+                "Run another evaluation to compare quality metrics "
+                "against a previous run."
+            )
+
+        # Actionable quality alerts
+        st.markdown("#### Quality Alerts")
+
+        if comparison["alerts"]:
+            for alert in comparison["alerts"]:
+                if "Safety warning" in alert:
+                    st.error(alert)
+                elif (
+                    "increased" in alert
+                    or "Low groundedness" in alert
+                    or "unavailable" in alert
+                ):
+                    st.warning(alert)
+                else:
+                    st.info(alert)
+        else:
+            st.success("No evaluation quality alerts were detected.")
+
+        # Quality metric trends
+        st.markdown("#### AI Quality Trends")
+
+        trend_rows = build_evaluation_trend_rows(history)
+        trend_df = pd.DataFrame(trend_rows).set_index("Run")
+
+        rate_columns = [
+            "Pass Rate (%)",
+            "Relevance (%)",
+            "Groundedness (%)",
+            "Verified Order Facts (%)",
+        ]
+        available_rate_columns = [
+            column
+            for column in rate_columns
+            if column in trend_df.columns and trend_df[column].notna().any()
+        ]
+
+        if available_rate_columns:
+            st.line_chart(
+                trend_df[available_rate_columns],
+                y_label="Rate (%)",
+                x_label="Evaluation run",
+            )
+        else:
+            st.info("No quality pass-rate metrics are available to chart.")
+
+        # Safety is represented by violations, not a fabricated pass rate.
+        if (
+            "Safety Violations" in trend_df.columns
+            and trend_df["Safety Violations"].notna().any()
+        ):
+            st.markdown("#### Safety Violation Trend")
+            safety_df = trend_df[["Safety Violations"]].dropna().astype(int)
+            st.bar_chart(
+                safety_df,
+                y="Safety Violations",
+                y_label="Number of violations",
+                x_label="Evaluation run",
+            )
+
+        st.markdown("#### Evaluation History")
+        history_columns = [
+            column
+            for column in [
+                "Run",
+                "Pass Rate (%)",
+                "Relevance (%)",
+                "Groundedness (%)",
+                "Verified Order Facts (%)",
+                "Review Required",
+                "Safety Violations",
+                "Groundedness Coverage (%)",
             ]
-        ).set_index("Run")
-
-        st.markdown("**AI evaluation trend**")
-        st.line_chart(
-            trend_df,
-            y="Pass Rate (%)",
-            y_label="Pass rate (%)",
-            x_label="Evaluation run",
+            if column in trend_df.reset_index().columns
+        ]
+        st.dataframe(
+            trend_df.reset_index()[history_columns].sort_values(
+                "Run", ascending=False
+            ),
+            use_container_width=True,
+            hide_index=True,
         )
 
         st.caption(
-            "The pass rate measures the configured automated checks. "
-            "It does not independently prove factual correctness."
+            "Rate changes are expressed in percentage points (pp). "
+            "Missing historical metrics remain unavailable rather than "
+            "being treated as zero. These automated checks support review "
+            "but do not independently prove factual correctness."
         )
+
     else:
         st.info(
             "No evaluation history is available yet. "
