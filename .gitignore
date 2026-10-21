@@ -31,3 +31,9 @@ data/database/support_tickets.json
 
 # Temporary evaluation backups
 data/evaluation/*.bak
+
+
+# Generated evaluation reports
+automated_evaluation_report.json
+evaluation_report.json
+
