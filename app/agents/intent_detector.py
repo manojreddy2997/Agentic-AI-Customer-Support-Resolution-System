@@ -67,12 +67,13 @@ def detect_intent(message: str) -> str:
     order_patterns = [
         r"\b(order|package|parcel)\b.{0,30}\b(status|track|tracking|details|information|info)\b",
         r"\b(status|track|tracking|details|information|info)\b.{0,30}\b(order|package|parcel)\b",
+        r"\b(status|tracking|details|information|info)\b.{0,30}\bof\s+ord\d+\b",
+        r"\b(show|get|check|find|view)\b.{0,20}\b(status|tracking|details)\b.{0,20}\bof\s+ord\d+\b",
         r"\b(check|look up|lookup|find|show|get|view)\b.{0,30}\border\b",
         r"\bwhere is (my )?(order|package|parcel)\b",
         r"\bwhen will (my )?(order|package|parcel)\b",
         r"\bexpected delivery\b",
     ]
-
     if has_order_id and any(
         re.search(pattern, text) for pattern in order_patterns
     ):

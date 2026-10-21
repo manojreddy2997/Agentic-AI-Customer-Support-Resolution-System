@@ -1,5 +1,4 @@
-
-import pytest
+﻿import pytest
 
 from app.agents.intent_detector import detect_intent
 
@@ -32,6 +31,14 @@ from app.agents.intent_detector import detect_intent
         ),
         (
             "What is the status of my order?",
+            "order_status",
+        ),
+        (
+            "What is the status of ORD1002?",
+            "order_status",
+        ),
+        (
+            "Show me the status of ORD1002",
             "order_status",
         ),
         (
