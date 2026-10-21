@@ -371,3 +371,53 @@ def test_product_question_returns_verified_order_item(monkeypatch):
     assert "ORD1002" in response
     assert "Mechanical Keyboard" in response
     assert "Delayed" in response
+
+def test_end_to_end_delayed_order_ticket_workflow(monkeypatch, tmp_path):
+    database_file = tmp_path / "support_tickets.json"
+    monkeypatch.setattr(ticket_tools, "TICKETS_FILE", database_file)
+
+    # Avoid external policy retrieval during this integration test.
+    monkeypatch.setattr(
+        support_agent,
+        "_get_policy_context",
+        lambda message: ([], ""),
+    )
+
+    # Step 1: Verify the order through the support agent.
+    order_response = support_agent.generate_support_response(
+        "What is the status of ORD1002?"
+    )
+
+    assert "ORD1002" in order_response
+    assert "Delayed" in order_response
+    assert "Mechanical Keyboard" in order_response
+
+    # Checking an order must not create a ticket.
+    assert ticket_tools.list_tickets() == []
+
+    # Step 2: Explicitly request a support ticket.
+    ticket_response = support_agent.generate_support_response(
+        "Please create a support ticket for delayed order ORD1002."
+    )
+
+    assert "ticket was created successfully" in ticket_response.lower()
+    assert "ORD1002" in ticket_response
+    assert "TKT-" in ticket_response
+    assert "Open" in ticket_response
+
+    # Step 3: Confirm the ticket was actually persisted.
+    tickets = ticket_tools.list_tickets()
+    assert len(tickets) == 1
+
+    ticket_id = tickets[0]["ticket_id"]
+    assert ticket_id in ticket_response
+
+    # Step 4: Repeating the request must reuse the active ticket.
+    repeated_response = support_agent.generate_support_response(
+        "Please create a support ticket for delayed order ORD1002."
+    )
+
+    assert "existing active ticket" in repeated_response.lower()
+    assert ticket_id in repeated_response
+    assert len(ticket_tools.list_tickets()) == 1
+
