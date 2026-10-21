@@ -15,7 +15,7 @@ def main():
     started_at = datetime.now(timezone.utc).isoformat()
 
     result = subprocess.run(
-        [sys.executable, "-m", "pytest", "tests", "-q"],
+        [sys.executable, "-m", "pytest", "-q"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -35,7 +35,7 @@ def main():
 
     report = {
         "timestamp": started_at,
-        "command": "python -m pytest tests -q",
+        "command": ["python", "-m", "pytest", "-q"],
         "exit_code": result.returncode,
         "passed": result.returncode == 0,
         "summary": summary_lines[-1] if summary_lines else "No summary found",
