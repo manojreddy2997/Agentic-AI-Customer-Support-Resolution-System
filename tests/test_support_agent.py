@@ -421,3 +421,29 @@ def test_end_to_end_delayed_order_ticket_workflow(monkeypatch, tmp_path):
     assert ticket_id in repeated_response
     assert len(ticket_tools.list_tickets()) == 1
 
+
+def test_refund_inquiry_never_creates_ticket_or_processes_refund(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        support_agent,
+        "_get_policy_context",
+        lambda message: ([], ""),
+    )
+
+    def fail_if_called(**kwargs):
+        raise AssertionError(
+            "A refund inquiry must not trigger ticket creation"
+        )
+
+    monkeypatch.setattr(support_agent, "create_ticket", fail_if_called)
+
+    response = support_agent.generate_support_response(
+        "Is ORD1002 eligible for a refund?"
+    )
+
+    assert "eligible for a refund" in response.lower()
+    assert "No refund has been processed" in response
+    assert "ticket" not in response.lower()
+
+
