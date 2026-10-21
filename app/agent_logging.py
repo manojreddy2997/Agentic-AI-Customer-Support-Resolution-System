@@ -3,6 +3,7 @@
 
 import json
 import logging
+import re
 from datetime import datetime, timezone
 from app.core.config import LOG_LEVEL
 
@@ -40,7 +41,16 @@ def _redact_fields(fields):
     safe_fields = {}
 
     for key, value in fields.items():
-        normalized_key = key.lower().replace("-", "_")
+        normalized_key = re.sub(
+            r"(?<=[a-z0-9])(?=[A-Z])",
+            "_",
+            key,
+        )
+        normalized_key = re.sub(
+            r"[^a-zA-Z0-9]+",
+            "_",
+            normalized_key,
+        ).strip("_").lower()
 
         if normalized_key in SENSITIVE_FIELD_NAMES:
             safe_fields[key] = REDACTED

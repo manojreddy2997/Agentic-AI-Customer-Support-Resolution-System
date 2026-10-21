@@ -57,3 +57,23 @@ def test_nested_sensitive_fields_are_redacted(monkeypatch):
     assert record["details"]["password"] == "[REDACTED]"
     assert record["details"]["status"] == "success"
     assert "nested-secret" not in message
+def test_camel_case_and_hyphenated_sensitive_fields_are_redacted(
+    monkeypatch,
+):
+    message = capture_log_event(
+        monkeypatch,
+        "field_name_variations_test",
+        apiKey="dummy-api-key",
+        refreshToken="dummy-refresh-token",
+        **{"access-token": "dummy-access-token"},
+    )
+
+    record = json.loads(message)
+
+    assert record["apiKey"] == "[REDACTED]"
+    assert record["refreshToken"] == "[REDACTED]"
+    assert record["access-token"] == "[REDACTED]"
+
+    assert "dummy-api-key" not in message
+    assert "dummy-refresh-token" not in message
+    assert "dummy-access-token" not in message
