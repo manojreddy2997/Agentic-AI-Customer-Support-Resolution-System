@@ -245,7 +245,7 @@ Run the full automated test suite from the project root:
 python -m pytest -q
 ```
 
-The latest verified local run completed with **98 passing tests**. Test counts may change as the project evolves.
+The latest verified local run completed with **102 passing tests**. Test counts may change as the project evolves.
 
 Tests cover supported application behavior, tool validation, MCP integration, logging safeguards, and other regression scenarios.
 
